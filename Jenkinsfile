@@ -13,15 +13,19 @@ node {
 		withDockerRegistry([ credentialsId: "dockerHub", url: "" ]) {
 		app.push()
 		app.push("latest")
+		}
 	}
+
+	stage('Remove running image') {
+		sh ("docker rm ${application} -f ")
 	}
 
 	stage('Deploy') {
-		sh ("docker run -d -p 81:8080 -v /var/log/:/var/log/ ${dockerhubaccountid}/${application}:${BUILD_NUMBER}")
+		sh ("docker run -d -p 81:8080 -v /var/log/:/var/log/ --name ${application} ${dockerhubaccountid}/${application}:${BUILD_NUMBER}")
 	}
 	
 	stage('Remove old images') {
 		// remove docker pld images
-		sh("docker rmi ${dockerhubaccountid}/${application}:latest -f")
+		sh("docker rmi `docker images ${dockerhubaccountid}/${application} -q` -f")
    }
 }
